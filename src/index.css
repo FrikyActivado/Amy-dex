@@ -91,11 +91,12 @@ body {
 }
 
 .back-btn {
-  background: none;
-  border: none;
+  background: rgb(0, 181, 253);
+  border-radius: 5px;
   font-size: 2rem;
+  justify-items: center;
   cursor: pointer;
-  color: #333;
+  color: white;
   margin-bottom: 20px;
 }
 
