@@ -5,6 +5,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [selectedPokemon, setSelectedPokemon] = useState(null);
   const [evolutions, setEvolutions] = useState([]);
+  const [mainDetailImage, setMainDetailImage] = useState("");
+  const [mainDetailName, setMainDetailName] = useState("");
 
   // USAMOS REFS PARA CONTROLAR EL FLUJO
   const offsetRef = useRef(0);
@@ -86,7 +88,10 @@ function App() {
   const handleSelect = async (pokemon) => {
     scrollPos.current = window.scrollY;
     setSelectedPokemon(pokemon);
+    setMainDetailImage(pokemon.sprites.other["official-artwork"].front_default);
+    setMainDetailName(pokemon.name);
     setEvolutions([]);
+
     try {
       const specRes = await fetch(
         `https://pokeapi.co/api/v2/pokemon-species/${pokemon.id}/`,
@@ -94,20 +99,37 @@ function App() {
       const specData = await specRes.json();
       const evoRes = await fetch(specData.evolution_chain.url);
       const evoData = await evoRes.json();
-      let chain = [];
-      let current = evoData.chain;
-      while (current) {
-        const id = current.species.url.split("/")[6];
-        chain.push({
-          name: current.species.name,
+
+      const allEvolutions = [];
+
+      // Función mágica que recorre ramas paralelas
+      const traverse = (node) => {
+        const id = node.species.url.split("/")[6];
+        allEvolutions.push({
+          name: node.species.name,
           image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`,
         });
-        current = current.evolves_to[0];
-      }
-      setEvolutions(chain);
+
+        // Si hay evoluciones (pueden ser 1, 2 o 8 como Eevee)
+        if (node.evolves_to.length > 0) {
+          node.evolves_to.forEach((evolutionNode) => {
+            traverse(evolutionNode);
+          });
+        }
+      };
+
+      traverse(evoData.chain);
+      setEvolutions(allEvolutions);
     } catch (e) {
-      console.error(e);
+      console.error("Error en evoluciones complejas", e);
     }
+  };
+
+  const changeMainView = (evo) => {
+    setMainDetailImage(evo.image);
+    setMainDetailName(evo.name);
+    // Opcional: mover el scroll hacia arriba para ver el cambio
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   if (selectedPokemon) {
@@ -116,18 +138,25 @@ function App() {
         <button className="back-btn" onClick={() => setSelectedPokemon(null)}>
           ←
         </button>
+
+        {/* Usamos el nuevo estado para la imagen y el nombre */}
         <img
           className="main-sprite"
-          src={selectedPokemon.sprites.other["official-artwork"].front_default}
-          alt={selectedPokemon.name}
+          src={mainDetailImage}
+          alt={mainDetailName}
         />
         <h1 style={{ textAlign: "center", textTransform: "capitalize" }}>
-          {selectedPokemon.name}
+          {mainDetailName}
         </h1>
+
         <div className="evolution-chain">
           {evolutions.map((evo, i) => (
-            <div key={i} className="evo-item">
-              <p>Evolución {i + 1}</p>
+            <div
+              key={i}
+              className="evo-item"
+              onClick={() => changeMainView(evo)} // Al hacer clic, cambia la de arriba
+              style={{ cursor: "pointer" }}
+            >
               <img src={evo.image} alt={evo.name} />
               <p>{evo.name}</p>
             </div>
