@@ -135,3 +135,13 @@ body {
   text-transform: capitalize;
   font-weight: bold;
 }
+
+.header {
+  position: -webkit-sticky; /* Soporte para Safari */
+  position: sticky;
+  top: 0;
+  background-color: #ffffff; /* Evita que los Pokémon se traslapan por detrás de forma transparente */
+  z-index: 100; /* Asegura que el buscador siempre quede por encima de las tarjetas de Pokémon */
+  padding: 20px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Un sombreado sutil para darle profundidad al hacer scroll */
+}
